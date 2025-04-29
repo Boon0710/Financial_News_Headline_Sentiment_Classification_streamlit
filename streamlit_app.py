@@ -5,12 +5,19 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from transformers import AutoTokenizer, AutoModel, AutoModelForTokenClassification, pipeline
 from huggingface_hub import hf_hub_download
+import os
+
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 # === Load word segmentation model ===
 @st.cache_resource
 def load_segmenter():
-    seg_tokenizer = AutoTokenizer.from_pretrained("NlpHUST/vi-word-segmentation")
-    seg_model = AutoModelForTokenClassification.from_pretrained("NlpHUST/vi-word-segmentation")
+    seg_tokenizer = AutoTokenizer.from_pretrained(
+        "NlpHUST/vi-word-segmentation", token=HF_TOKEN
+    )
+    seg_model = AutoModelForTokenClassification.from_pretrained(
+        "NlpHUST/vi-word-segmentation", token=HF_TOKEN
+    )
     return pipeline("token-classification", model=seg_model, tokenizer=seg_tokenizer)
 
 def segment_sentence(text, segmenter):
@@ -58,10 +65,14 @@ class CustomPhoBERTClassifier(torch.nn.Module):
 @st.cache_resource
 def load_sentiment_model():
     model_name = "Boon0710/phoBert-based-financial-news-sentiment-classification"
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    phobert = AutoModel.from_pretrained(model_name, output_hidden_states=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, token=HF_TOKEN)
+    phobert = AutoModel.from_pretrained(model_name, output_hidden_states=True, token=HF_TOKEN)
     model = CustomPhoBERTClassifier(phobert)
-    weight_path = hf_hub_download(repo_id="Boon0710/phoBert-based-financial-news-sentiment-classification-v2", filename="pytorch_model.bin")
+    weight_path = hf_hub_download(
+        repo_id="Boon0710/phoBert-based-financial-news-sentiment-classification-v2",
+        filename="pytorch_model.bin",
+        token=HF_TOKEN
+    )
     model.load_state_dict(torch.load(weight_path, map_location="cpu"), strict=False)
     model.eval()
     return tokenizer, model
