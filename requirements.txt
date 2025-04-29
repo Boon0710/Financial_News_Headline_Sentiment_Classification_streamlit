@@ -1,0 +1,8 @@
+streamlit
+torch
+transformers
+datasets
+pandas
+huggingface_hub
+matplotlib
+scikit-learn
